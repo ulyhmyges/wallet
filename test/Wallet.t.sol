@@ -3,9 +3,11 @@ pragma solidity ^0.8.13;
 
 import {Test, console} from "forge-std/Test.sol";
 import {Wallet} from "../src/Wallet.sol";
+import {Storage} from "../src/Storage.sol";
 
 contract WalletTest is Test {
     Wallet public wallet;
+    Storage public str;
     address public constant USER1 = address(0x1);
     address public constant USER2 = address(0x02);
     address public USER = address(0x36);
@@ -65,6 +67,13 @@ contract WalletTest is Test {
         assertEq(wallet.remove(user), false);
         assertEq(wallet.getSize(), 2);
         
+    }
+
+    function test_Submit() public {
+        bytes memory data = abi.encodeWithSignature("receive()");
+        uint256 value = 0;
+        uint256 txID = wallet.submit(address(str), value, data);
+        assertEq(txID, 1);
     }
 
 
