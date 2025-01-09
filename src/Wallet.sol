@@ -31,6 +31,11 @@ contract Wallet {
         require(success, "Transaction did not execute");
         return data;
     }
+
+    function validate(uint256 _txID) public view {
+        Tx memory transaction = transactions[_txID];
+        transaction.validators += 1;
+    }
     constructor(address owner1, address owner2, address owner3){
         owners.push(owner1);
         owners.push(owner2);
