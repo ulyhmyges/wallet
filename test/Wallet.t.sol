@@ -107,7 +107,40 @@ contract WalletTest is Test {
         assertEq(txID, 1);
     }
 
-    function test_Execute_Failed() public {
+    function test_Submit_Failed() public {
+        bytes memory data = abi.encodeWithSignature("receive()");
+        uint256 value = 0;
+        vm.expectRevert("Not authorized");
+        wallet.submit(address(str), value, data);
+    }
+
+    function test_Validate() public {
+        str.store(2890);
+        bytes memory data = abi.encodeWithSignature("retrieve()");
+        uint256 value = 0;
+        vm.prank(USER1);    // submit tx by an owner
+        uint256 txID = wallet.submit(address(str), value, data);
+        assertEq(txID, 1);
+
+        // need an owner to validate tx
+        vm.prank(myAddr);
+        wallet.validate(txID);
+    }
+
+    function test_Validate_Failed() public {
+        str.store(2890);
+        bytes memory data = abi.encodeWithSignature("retrieve()");
+        uint256 value = 0;
+        vm.prank(USER1);    // submit tx by an owner
+        uint256 txID = wallet.submit(address(str), value, data);
+        assertEq(txID, 1);
+
+        // need an owner to validate tx
+        vm.expectRevert("Not authorized");
+        wallet.validate(txID);
+    }
+
+   function test_Execute_RequireValidators_Failed() public {
         vm.startPrank(myAddr);
         bytes memory data = abi.encodeWithSignature("receive()");
         uint256 value = 0;
@@ -118,7 +151,7 @@ contract WalletTest is Test {
         vm.stopPrank();
     }
 
-    function test_Execute_Succeed() public {
+    function test_Execute() public {
         str.store(2890);
         bytes memory data = abi.encodeWithSignature("retrieve()");
         uint256 value = 0;
@@ -131,6 +164,21 @@ contract WalletTest is Test {
         bytes memory return_data = wallet.execute(txID);
         assertEq(abi.encode(2890), return_data);
         vm.stopPrank();
+    }
+
+    function test_Execute_Failed2() public {
+        str.store(2890);
+        bytes memory data = abi.encodeWithSignature("retrieve()");
+        uint256 value = 0;
+        vm.prank(USER1);    // submit tx by an owner
+        uint256 txID = wallet.submit(address(str), value, data);
+        assertEq(txID, 1);
+
+        vm.prank(myAddr); // need 2 validations to execute a tx by an owner
+        wallet.validate(txID);
+
+        vm.expectRevert("Not authorized");
+        wallet.execute(txID);
     }
 
     function test_RequireExecuted_Failed() public {
@@ -151,6 +199,20 @@ contract WalletTest is Test {
         assertEq(abi.encode(2890), return_data);
         vm.expectRevert("Transaction executed");
         wallet.execute(txID);    // try to execute a transaction second time
+        vm.stopPrank();
+    }
+
+    function test_IsValidator_Failed() public {
+        str.store(2890);
+        bytes memory data = abi.encodeWithSignature("retrieve()");
+        uint256 value = 0;
+        vm.startPrank(USER1);    // submit tx by an owner
+        uint256 txID = wallet.submit(address(str), value, data);
+        assertEq(txID, 1);
+
+        // need 2 validations to execute a tx by an owner
+        vm.expectRevert("Transaction already validated!");
+        wallet.validate(txID);
         vm.stopPrank();
     }
 

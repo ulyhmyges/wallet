@@ -4,7 +4,7 @@ import {Script, console} from "forge-std/Script.sol";
 
 import {Wallet } from "../src/Wallet.sol";
 
-contract GoldScript is Script {
+contract WalletScript is Script {
     Wallet public wallet;
     address public addr;
 
