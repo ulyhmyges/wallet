@@ -72,11 +72,9 @@ contract Wallet {
         _;
     }
 
-
-
     /// Add an owner
     /// @param user owner's address
-    function add(address user) public {
+    function add(address user) public onlyOwner {
         bool added = false;
         for (uint256 index = 0; index < owners.length; ++ index){
             if (owners[index] == user){

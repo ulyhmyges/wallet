@@ -40,12 +40,14 @@ contract WalletTest is Test {
 
     function test_AddOwner() public {
         assertEq(wallet.getSize(), 3);
+        vm.prank(myAddr);
         wallet.add(USER);
         assertEq(wallet.getSize(), 4);
     }
 
     function test_AddOwnerAdded() public {
         assertEq(wallet.getSize(), 3);
+        vm.prank(myAddr);
         wallet.add(myAddr);
         assertEq(wallet.getSize(), 3);
     }
@@ -124,5 +126,6 @@ contract WalletTest is Test {
         wallet.execute(txID);
     }
 
+  
 
 }
