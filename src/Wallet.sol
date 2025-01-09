@@ -5,12 +5,36 @@ contract Wallet {
     address[] public owners;
     uint256 public constant minOwners = 3;
     uint256 public constant validatorsRequired = 2;
+    uint256 public txID;
 
 
+    struct Tx {
+        address target;
+        uint256 value;
+        bytes data;
+        uint256 validators;
+    }
+
+    mapping (uint256 txID => Tx tx) transactions;
+
+    function submit(address _target, uint256 _value, bytes calldata _data) public returns(uint256) {
+        txID += 1;
+        transactions[txID] = Tx({target: _target, value: _value, data: _data, validators: 1});
+        return txID;
+    }
+
+    function execute(uint256 _txID) public returns (bytes memory){
+        Tx memory transaction = transactions[_txID];
+        address target = transaction.target;
+        (bool success, bytes memory data) = target.call{value: transaction.value}(transaction.data);
+        require(success, "Transaction did not execute");
+        return data;
+    }
     constructor(address owner1, address owner2, address owner3){
         owners.push(owner1);
         owners.push(owner2);
         owners.push(owner3);
+        txID = 0;
     }
    
     function get(uint256 index) public view returns(address){
@@ -37,6 +61,8 @@ contract Wallet {
         require(isOwner(msg.sender), "Not authorized");
         _;
     }
+
+
 
     /// Add an owner
     /// @param user owner's address
