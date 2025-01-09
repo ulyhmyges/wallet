@@ -1,66 +1,17 @@
-## Foundry
+## Multi-sign wallet project
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+consignes:
+Déploiement du wallet avec 3 addresses et au moins deux validation obligatoire.
+Les signataires peuvent soumettre une tx.
+Les signataires peuvent valider et révoquer une tx.
+Les signataires peuvent ajouter ou retirer un signataire, en gardant toujours au moin 3 signataires dont deux obligatoire.
+PAS DE LIB
 
-Foundry consists of:
+A rendre:
+- Repo GH
+- Test coverage 100%
+- Script de déploiement
+- Code suivant les best practices
+- Natspec
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
-
-## Documentation
-
-https://book.getfoundry.sh/
-
-## Usage
-
-### Build
-
-```shell
-$ forge build
-```
-
-### Test
-
-```shell
-$ forge test
-```
-
-### Format
-
-```shell
-$ forge fmt
-```
-
-### Gas Snapshots
-
-```shell
-$ forge snapshot
-```
-
-### Anvil
-
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
 ```
