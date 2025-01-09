@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.20;
 
 import {Test, console} from "forge-std/Test.sol";
 import {Wallet} from "../src/Wallet.sol";
@@ -14,6 +14,7 @@ contract WalletTest is Test {
     address public myAddr = address(0x99bdA7fd93A5c41Ea537182b37215567e832A726);
     function setUp() public {
         wallet = new Wallet(USER1, USER2, myAddr);
+        str = new Storage();
     }
 
     function test_IsOwner() public view {
@@ -74,6 +75,27 @@ contract WalletTest is Test {
         uint256 value = 0;
         uint256 txID = wallet.submit(address(str), value, data);
         assertEq(txID, 1);
+    }
+
+    function test_Execute_Failed() public {
+        bytes memory data = abi.encodeWithSignature("receive()");
+        uint256 value = 0;
+        uint256 txID = wallet.submit(address(str), value, data);
+        assertEq(txID, 1);
+        vm.expectRevert("Not enough validators");
+        wallet.execute(txID);
+    }
+
+    function test_Execute_Succeed() public {
+        str.store(2890);
+        bytes memory data = abi.encodeWithSignature("retrieve()");
+      
+        uint256 value = 0;
+        uint256 txID = wallet.submit(address(str), value, data);
+        assertEq(txID, 1);
+        wallet.validate(txID);
+        bytes memory return_data = wallet.execute(txID);
+        assertEq(abi.encode(2890), return_data);
     }
 
 

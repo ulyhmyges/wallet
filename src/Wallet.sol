@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.20;
 
+import {console} from "forge-std/Test.sol";
+
 contract Wallet {
     address[] public owners;
     uint256 public constant minOwners = 3;
@@ -27,16 +29,17 @@ contract Wallet {
     function execute(uint256 _txID) public returns (bytes memory){
         Tx memory transaction = transactions[_txID];
         address target = transaction.target;
-        (bool success, bytes memory data) = target.call{value: transaction.value}(transaction.data);
+        (bool success, bytes memory data) = target.call(transaction.data);
         require(!transaction.executed, "Transaction executed");
         require(transaction.validators >= validatorsRequired, "Not enough validators");
         require(success, "Transaction did not execute");
+        console.log("execute==");
+        console.logBytes(data);
         return data;
     }
 
-    function validate(uint256 _txID) public view {
-        Tx memory transaction = transactions[_txID];
-        transaction.validators += 1;
+    function validate(uint256 _txID) public {
+        transactions[_txID].validators += 1;
     }
     constructor(address owner1, address owner2, address owner3){
         owners.push(owner1);
