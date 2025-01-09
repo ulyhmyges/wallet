@@ -13,13 +13,14 @@ contract Wallet {
         uint256 value;
         bytes data;
         uint256 validators;
+        bool executed;
     }
 
     mapping (uint256 txID => Tx tx) transactions;
 
     function submit(address _target, uint256 _value, bytes calldata _data) public returns(uint256) {
         txID += 1;
-        transactions[txID] = Tx({target: _target, value: _value, data: _data, validators: 1});
+        transactions[txID] = Tx({target: _target, value: _value, data: _data, validators: 1, executed: false});
         return txID;
     }
 
@@ -27,6 +28,7 @@ contract Wallet {
         Tx memory transaction = transactions[_txID];
         address target = transaction.target;
         (bool success, bytes memory data) = target.call{value: transaction.value}(transaction.data);
+        require(!transaction.executed, "Transaction executed");
         require(transaction.validators >= validatorsRequired, "Not enough validators");
         require(success, "Transaction did not execute");
         return data;
