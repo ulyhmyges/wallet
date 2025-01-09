@@ -88,21 +88,17 @@ contract Wallet {
 
     /// Remove an owner
     /// @param user owner's address
-    function remove(address user) public returns(bool) {
+    function remove(address user) public onlyOwner returns(bool) {
         bool isRemoved = false;
         uint256 index = 0;
         for (index; index < owners.length; ++index){
             if (owners[index] == user){
-                delete owners[index];
+                address lastOwner = owners[owners.length - 1];
+                owners[index] = lastOwner;
+                owners.pop();
                 isRemoved = true;
                 break;
             }
-        }
-        if (isRemoved){
-            for (uint256 j = index; j < owners.length - 1; ++j){
-                owners[j] == owners[j+1];
-            }
-            owners.pop();
         }
         return isRemoved;
     }
