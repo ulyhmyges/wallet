@@ -29,12 +29,11 @@ contract Wallet {
     function execute(uint256 _txID) public returns (bytes memory){
         Tx memory transaction = transactions[_txID];
         address target = transaction.target;
-        (bool success, bytes memory data) = target.call(transaction.data);
         require(!transaction.executed, "Transaction executed");
         require(transaction.validators >= validatorsRequired, "Not enough validators");
-        require(success, "Transaction did not execute");
-        console.log("execute==");
-        console.logBytes(data);
+        (bool success, bytes memory data) = target.call(transaction.data);
+        require(success, "Call failed");
+        transactions[_txID].executed = true;
         return data;
     }
 

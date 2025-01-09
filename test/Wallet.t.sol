@@ -50,13 +50,11 @@ contract WalletTest is Test {
         assertEq(wallet.getSize(), 3);
     }
 
-
     function test_RemoveOwner() public {
         assertEq(wallet.getSize(), 3);
         assertEq(wallet.remove(USER1), true);
         assertEq(wallet.getSize(), 2);
     }
-
 
     function test_RemoveOwnerRemoved() public {
         address user = wallet.get(2);
@@ -96,6 +94,34 @@ contract WalletTest is Test {
         wallet.validate(txID);
         bytes memory return_data = wallet.execute(txID);
         assertEq(abi.encode(2890), return_data);
+    }
+
+    function test_RequireExecuted_Failed() public {
+        str.store(2890);
+        bytes memory data = abi.encodeWithSignature("retrieve()");
+        uint256 value = 0;
+        uint256 txID = wallet.submit(address(str), value, data);
+        assertEq(txID, 1);
+        wallet.validate(txID);
+        bytes memory return_data = wallet.execute(txID);
+        assertEq(abi.encode(2890), return_data);
+        // try to execute a transaction second time
+        vm.expectRevert("Transaction executed");
+        wallet.execute(txID);
+    }
+
+    function test_RequireCall_Failed() public {
+        str.store(2890);
+        bytes memory data = abi.encodeWithSignature("do_not_exist_method()");
+        uint256 value = 0;
+        uint256 txID = wallet.submit(address(str), value, data);
+        assertEq(txID, 1);
+
+        // need 2 validators
+        wallet.validate(txID);
+
+        vm.expectRevert("Call failed");
+        wallet.execute(txID);
     }
 
 
