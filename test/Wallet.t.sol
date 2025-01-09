@@ -45,11 +45,23 @@ contract WalletTest is Test {
         assertEq(wallet.getSize(), 4);
     }
 
+    function test_AddOwner_Failed() public {
+        assertEq(wallet.getSize(), 3);
+        vm.expectRevert("Not authorized");
+        wallet.add(USER);
+    }
+
     function test_AddOwnerAdded() public {
         assertEq(wallet.getSize(), 3);
         vm.prank(myAddr);
         wallet.add(myAddr);
         assertEq(wallet.getSize(), 3);
+    }
+
+    function test_AddOwnerAdded_Failed() public {
+        assertEq(wallet.getSize(), 3);
+        vm.expectRevert("Not authorized");
+        wallet.add(myAddr);
     }
 
     function test_RemoveOwner() public {
@@ -59,79 +71,104 @@ contract WalletTest is Test {
         assertEq(wallet.getSize(), 2);
     }
 
+    function test_RemoveOwner_Failed() public {
+        assertEq(wallet.getSize(), 3);
+        vm.expectRevert("Not authorized");
+        assertEq(wallet.remove(USER1), false);
+    }
+
     function test_RemoveOwnerRemoved() public {
         vm.startPrank(myAddr, myAddr);
         address user = wallet.get(1);
         assertEq(wallet.getSize(), 3);
-     
- 
         assertEq(wallet.remove(user), true);
         assertEq(wallet.getSize(), 2);
-
-        
         assertEq(wallet.remove(user), false);
-        // assertEq(wallet.getSize(), 2);
+        assertEq(wallet.getSize(), 2);
+        vm.stopPrank(); 
+    }
 
-        vm.stopPrank();
-        
+    function test_RemoveOwnerRemoved_Failed() public {
+        vm.startPrank(myAddr, myAddr);
+        address user = wallet.get(1);
+        assertEq(wallet.getSize(), 3);
+        assertEq(wallet.remove(user), true);
+        assertEq(wallet.getSize(), 2);
+        vm.stopPrank(); 
+        vm.expectRevert("Not authorized");
+        assertEq(wallet.remove(user), false);
     }
 
     function test_Submit() public {
         bytes memory data = abi.encodeWithSignature("receive()");
         uint256 value = 0;
+        vm.prank(myAddr);
         uint256 txID = wallet.submit(address(str), value, data);
         assertEq(txID, 1);
     }
 
     function test_Execute_Failed() public {
+        vm.startPrank(myAddr);
         bytes memory data = abi.encodeWithSignature("receive()");
         uint256 value = 0;
         uint256 txID = wallet.submit(address(str), value, data);
         assertEq(txID, 1);
         vm.expectRevert("Not enough validators");
         wallet.execute(txID);
+        vm.stopPrank();
     }
 
     function test_Execute_Succeed() public {
         str.store(2890);
         bytes memory data = abi.encodeWithSignature("retrieve()");
-      
         uint256 value = 0;
+        vm.prank(USER1);    // submit tx by an owner
         uint256 txID = wallet.submit(address(str), value, data);
         assertEq(txID, 1);
+
+        vm.startPrank(myAddr); // need 2 validations to execute a tx by an owner
         wallet.validate(txID);
         bytes memory return_data = wallet.execute(txID);
         assertEq(abi.encode(2890), return_data);
+        vm.stopPrank();
     }
 
     function test_RequireExecuted_Failed() public {
+        vm.startPrank(myAddr);
         str.store(2890);
         bytes memory data = abi.encodeWithSignature("retrieve()");
         uint256 value = 0;
         uint256 txID = wallet.submit(address(str), value, data);
         assertEq(txID, 1);
+        vm.stopPrank();
+
+        // validate tx by an owner
+        vm.prank(USER1);
         wallet.validate(txID);
+
+        vm.startPrank(myAddr);
         bytes memory return_data = wallet.execute(txID);
         assertEq(abi.encode(2890), return_data);
-        // try to execute a transaction second time
         vm.expectRevert("Transaction executed");
-        wallet.execute(txID);
+        wallet.execute(txID);    // try to execute a transaction second time
+        vm.stopPrank();
     }
 
     function test_RequireCall_Failed() public {
+        vm.startPrank(myAddr);
         str.store(2890);
         bytes memory data = abi.encodeWithSignature("do_not_exist_method()");
         uint256 value = 0;
         uint256 txID = wallet.submit(address(str), value, data);
         assertEq(txID, 1);
+        vm.stopPrank();
 
-        // need 2 validators
+        // validate tx by an owner and execute it
+        vm.startPrank(USER1);
         wallet.validate(txID);
 
         vm.expectRevert("Call failed");
-        wallet.execute(txID);
+        wallet.execute(txID);   // execute tx
+        vm.stopPrank();
     }
-
-  
-
 }

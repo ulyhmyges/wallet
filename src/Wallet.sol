@@ -14,31 +14,58 @@ contract Wallet {
         address target;
         uint256 value;
         bytes data;
-        uint256 validators;
+        address[] validators;
         bool executed;
     }
 
     mapping (uint256 txID => Tx tx) transactions;
 
-    function submit(address _target, uint256 _value, bytes calldata _data) public returns(uint256) {
-        txID += 1;
-        transactions[txID] = Tx({target: _target, value: _value, data: _data, validators: 1, executed: false});
-        return txID;
-    }
-
-    function execute(uint256 _txID) public returns (bytes memory){
+    function execute(uint256 _txID) public onlyOwner returns (bytes memory){
         Tx memory transaction = transactions[_txID];
         address target = transaction.target;
         require(!transaction.executed, "Transaction executed");
-        require(transaction.validators >= validatorsRequired, "Not enough validators");
+        require(transaction.validators.length >= validatorsRequired, "Not enough validators");
         (bool success, bytes memory data) = target.call(transaction.data);
         require(success, "Call failed");
         transactions[_txID].executed = true;
         return data;
     }
 
-    function validate(uint256 _txID) public {
-        transactions[_txID].validators += 1;
+    function validate(uint256 _txID) public onlyOwner {
+        require(!isValidator(_txID), "Transaction already validated!");
+        transactions[_txID].validators.push(msg.sender);
+    }
+
+
+    function submit(address _target, uint256 _value, bytes calldata _data) onlyOwner public returns(uint256) {
+        txID += 1;
+        address[] memory arr = new address[](1);
+        arr[0] = msg.sender;
+        transactions[txID] = createTx(_target, _value, _data, arr);
+        return txID;
+    }
+
+    function createTx(address _target, uint256 _value, bytes calldata _data, address[] memory _validators) internal pure returns (Tx memory){
+        return Tx({
+            target: _target,
+            value: _value, 
+            data: _data, 
+            validators: _validators, 
+            executed: false
+        });
+    }
+
+    function isValidator(uint256 _txID) internal view returns(bool) {
+        bool isVal = false;
+        Tx memory transaction = transactions[_txID];
+        address[] memory validators = transaction.validators;
+        for (uint256 i = 0; i < validators.length; ++i ){
+            if (validators[i] == msg.sender){
+                isVal = true;
+                break;
+            }
+        }
+        return isVal;
     }
     constructor(address owner1, address owner2, address owner3){
         owners.push(owner1);
