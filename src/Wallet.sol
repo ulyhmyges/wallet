@@ -27,6 +27,7 @@ contract Wallet {
         Tx memory transaction = transactions[_txID];
         address target = transaction.target;
         (bool success, bytes memory data) = target.call{value: transaction.value}(transaction.data);
+        require(transaction.validators >= validatorsRequired, "Not enough validators");
         require(success, "Transaction did not execute");
         return data;
     }
