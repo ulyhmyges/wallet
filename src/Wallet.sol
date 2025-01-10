@@ -21,6 +21,7 @@ contract Wallet {
     mapping (uint256 txID => Tx tx) transactions;
 
     function execute(uint256 _txID) public onlyOwner returns (bytes memory){
+        require(_txID <= txID && _txID > 0 , "Transaction do not exist");
         Tx memory transaction = transactions[_txID];
         address target = transaction.target;
         require(!transaction.executed, "Transaction already executed");
@@ -32,6 +33,7 @@ contract Wallet {
     }
 
     function validate(uint256 _txID) public onlyOwner {
+        require(_txID <= txID && _txID > 0 , "Transaction do not exist");
         require(!isValidator(_txID), "Transaction already validated!");
         require(!transactions[_txID].executed, "Transaction already executed");
         transactions[_txID].validators.push(msg.sender);

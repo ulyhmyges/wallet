@@ -140,6 +140,13 @@ contract WalletTest is Test {
         wallet.validate(txID);
     }
 
+    function test_Validate_TxDoNotExist() public {
+        // need an owner to validate tx
+        vm.prank(myAddr);
+        vm.expectRevert("Transaction do not exist");
+        wallet.validate(3);
+    }
+
 
     function test_ValidateExecutedTx() public {
         str.store(2890);
@@ -183,6 +190,13 @@ contract WalletTest is Test {
         bytes memory return_data = wallet.execute(txID);
         assertEq(abi.encode(2890), return_data);
         vm.stopPrank();
+    }
+
+    function test_Execute_TxDoNotExist() public {
+        // need an owner to validate tx
+        vm.prank(myAddr);
+        vm.expectRevert("Transaction do not exist");
+        wallet.execute(3);
     }
 
     function test_Execute_Failed2() public {
