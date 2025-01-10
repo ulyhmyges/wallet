@@ -140,6 +140,25 @@ contract WalletTest is Test {
         wallet.validate(txID);
     }
 
+
+    function test_ValidateExecutedTx() public {
+        str.store(2890);
+        bytes memory data = abi.encodeWithSignature("retrieve()");
+        uint256 value = 0;
+        vm.prank(USER1);    // submit tx by an owner
+        uint256 txID = wallet.submit(address(str), value, data);
+        assertEq(txID, 1);
+
+        vm.startPrank(myAddr); // need 2 validations to execute a tx by an owner
+        wallet.validate(txID);
+        bytes memory return_data = wallet.execute(txID);
+        assertEq(abi.encode(2890), return_data);
+        vm.stopPrank();
+        vm.prank(USER2);
+        vm.expectRevert("Transaction already executed");
+        wallet.validate(txID);
+    }
+
    function test_Execute_RequireValidators_Failed() public {
         vm.startPrank(myAddr);
         bytes memory data = abi.encodeWithSignature("receive()");
@@ -197,7 +216,7 @@ contract WalletTest is Test {
         vm.startPrank(myAddr);
         bytes memory return_data = wallet.execute(txID);
         assertEq(abi.encode(2890), return_data);
-        vm.expectRevert("Transaction executed");
+        vm.expectRevert("Transaction already executed");
         wallet.execute(txID);    // try to execute a transaction second time
         vm.stopPrank();
     }

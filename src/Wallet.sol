@@ -23,7 +23,7 @@ contract Wallet {
     function execute(uint256 _txID) public onlyOwner returns (bytes memory){
         Tx memory transaction = transactions[_txID];
         address target = transaction.target;
-        require(!transaction.executed, "Transaction executed");
+        require(!transaction.executed, "Transaction already executed");
         require(transaction.validators.length >= validatorsRequired, "Not enough validators");
         (bool success, bytes memory data) = target.call{value: transaction.value}(transaction.data);
         require(success, "Call failed");
@@ -33,6 +33,7 @@ contract Wallet {
 
     function validate(uint256 _txID) public onlyOwner {
         require(!isValidator(_txID), "Transaction already validated!");
+        require(!transactions[_txID].executed, "Transaction already executed");
         transactions[_txID].validators.push(msg.sender);
     }
 
